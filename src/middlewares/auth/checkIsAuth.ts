@@ -37,8 +37,7 @@ export const isAuth = async (req: IAuthRequest, res: Response, next: NextFunctio
         return res.status(403).json(
           customResponse<object>({
             data: {
-              token:token,
-              authHeader:authHeader
+         
             },
             success: false,
             error: true,
@@ -57,8 +56,7 @@ export const isAuth = async (req: IAuthRequest, res: Response, next: NextFunctio
           return res.status(403).json(
             customResponse<object>({
               data: {
-                token:token,
-                authHeader:authHeader
+         
               },
               success: false,
               error: true,
@@ -73,9 +71,18 @@ export const isAuth = async (req: IAuthRequest, res: Response, next: NextFunctio
 
         // if we did success go to the next middleware
         next();
-      } catch (error) {
-        return next(InternalServerError);
-      }
+      } catch (error :any) {
+        return res.status(500).json(
+          customResponse<object>({
+            data: {
+       
+            },
+            success: false,
+            error: true,
+            message: error.message,
+            status: 500,
+          }))
+              }
     }
   );
 };
