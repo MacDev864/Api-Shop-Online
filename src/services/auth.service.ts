@@ -224,10 +224,9 @@ export const getAuthProfileService = async (
   next: NextFunction
 ) => {
   try {
+
     const user = await User.findById(req.user?._id)
-      .select('-password -confirmPassword -cloudinary_id -status -isDeleted -acceptTerms -isVerified')
-      .populate('following', 'name  surname  profileImage bio')
-      .populate('followers', 'name  surname  profileImage bio')
+      .select('-username -confirmPassword  -status -isDeleted ')
       .populate('cart.items.productId')
       .exec();
 
@@ -257,7 +256,16 @@ export const getAuthProfileService = async (
       })
     );
   } catch (error) {
-    return next(InternalServerError);
+    return res.status(500).send(
+      customResponse<object>({
+        success: false,
+        error: true,
+        message: '',
+        status: 500,
+        data: {},
+      })
+    );
+    // return next(InternalServerError);
   }
 };
 
