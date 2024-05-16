@@ -116,7 +116,7 @@ export const addProductToCartService = async (
       return next(new createHttpError.BadRequest());
     }
 
-    const user = await User.findOne({ email: req.user?.username });
+    const user = await User.findOne({ username: req.user?.username });
 
     if (!user) {
       return next(createHttpError(401, `Auth Failed`));
@@ -159,7 +159,7 @@ export const deleteProductFromCartService = async (
       return next(new createHttpError.BadRequest());
     }
 
-    const user = await User.findOne({ email: req.user?.username });
+    const user = await User.findOne({ username: req.user?.username });
 
     if (!user) {
       return next(createHttpError(401, `Auth Failed`));
@@ -378,7 +378,7 @@ export const getCartService = async (req: AuthenticatedRequestBody<IUser>, res: 
 };
 
 export const clearCartService = async (req: AuthenticatedRequestBody<IUser>, res: Response, next: NextFunction) => {
-  const user = await User.findOne({ email: new RegExp(`^${req.user?.username}$`, 'i') });
+  const user = await User.findOne({ username: new RegExp(`^${req.user?.username}$`, 'i') });
 
   if (!user) {
     const message = `Auth Failed (Invalid Credentials)`;
