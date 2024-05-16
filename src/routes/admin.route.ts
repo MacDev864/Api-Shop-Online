@@ -5,7 +5,7 @@ import {
   addProductValidation,
   customRoles,
   deleteCommentValidation,
-  isAdmin,
+  isSuperadmin,
   isAuth,
   postIdValidation,
   postPaginationMiddleware,
@@ -21,8 +21,8 @@ import {
   usersPaginationMiddleware,
 } from '../middlewares';
 import {
-//   adminAddProductController,
-//   adminAddUserController,
+  adminAddProductController,
+  adminAddUserController,
 //   adminClearAllOrdersController,
 //   adminClearAllProductsController,
 //   adminCreatePostController,
@@ -41,20 +41,57 @@ import {
 //   adminGetProductsController,
   adminGetUserController,
   adminGetUsersController,
-//   adminRemoveUserController,
-//   adminUpdateAuthController,
+  adminRemoveUserController,
+  adminUpdateAuthController,
 //   adminUpdateOrderStatusController,
 //   adminUpdatePostController,
-//   adminUpdateProductController,
+  adminUpdateProductController,
 } from '../controllers/admin.controller';
 import { environmentConfig } from '../configs';
 // import { adminClearAllPostsService, adminDeleteAllOrderForGivenUserService } from '@src/services';
 import { authorizationRoles } from '../constants';
+import checkIsAdmin, { checkRoleAdmin } from '../middlewares/auth/checkIsAdmin';
 
 const router = express.Router();
-
-router.get('/users', isAuth, isAdmin, usersPaginationMiddleware(), adminGetUsersController);
-router.get('/users/:userId', isAuth, adminGetUserController);
-
+/* Users manage By Super admin   */
+router.get('/users', isAuth, isSuperadmin, usersPaginationMiddleware(), adminGetUsersController);
+router.get('/users/:userId', isAuth,isSuperadmin, adminGetUserController);
+router.post(
+  '/users/add',
+  isAuth,
+  isSuperadmin,
+  signupUserValidation,
+  adminAddUserController
+);
+router.put(
+  '/users/update/:userId',
+  isAuth,
+  isSuperadmin,
+  updateUserValidation,
+  adminUpdateAuthController
+);
+router.delete(
+  '/users/remove/:userId',
+  isAuth,
+  isSuperadmin,
+  userIdValidation,
+  adminRemoveUserController
+);
+/* Users manage By Super admin   */
+router.post(
+  '/products/add',
+  isAuth,
+  checkRoleAdmin,
+  addProductValidation,
+  adminAddProductController
+);
+router.put(
+  '/products/update/:productId',
+  isAuth,
+  isAuth,
+  checkRoleAdmin,
+  updateProductValidation,
+  adminUpdateProductController
+);
 
 export default router;
