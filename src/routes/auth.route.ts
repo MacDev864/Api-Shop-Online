@@ -26,7 +26,7 @@ const router = express.Router();
 router.post('/signup', signupUserValidation, signupController);
 router.post('/login', loginUserValidation, loginController);
 router.post('/logout', refreshTokenValidation, logoutController);
-router.patch('/update/:userId', isAuth, uploadImage.single('profileImage'), updateUserValidation, updateAuthController);
+router.patch('/update/:userId', isAuth, updateUserValidation, updateAuthController);
 router.delete('/remove/:userId', isAuth, userIdValidation, removeAuthController);
 router.post('/refresh-token', refreshTokenValidation, refreshTokenController);
 router.post('/reset-password/:userId/:token', resetPasswordValidation, resetPasswordController);
