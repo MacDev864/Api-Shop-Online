@@ -16,7 +16,118 @@ import {
 import { AuthenticatedRequestBody, IUser, ResponseT } from '../interfaces';
 import { cloudinary, verifyRefreshToken } from '../middlewares';
 import { authorizationRoles } from '../constants';
+/*
+export const mockSignupService = async (req: Request, res: Response<ResponseT<null>>, next: NextFunction) => {
+  
+  const arr_mock = [{
+    "username":"MacDev648",
+    "password":"Mm123456789",
+    "confirmPassword" :"Mm123456789"
+},{
+  "username":"MacDev648",
+  "password":"Mm123456789",
+  "confirmPassword" :"Mm123456789"
+},{
+  "username":"MacDev648",
+  "password":"Mm123456789",
+  "confirmPassword" :"Mm123456789"
+},{
+  "username":"MacDev648",
+  "password":"Mm123456789",
+  "confirmPassword" :"Mm123456789"
+}];
+ let result: object[] = [];
+  arr_mock.forEach(async (value:any,index:number)=>{
+     value.username  = value.username + (index +20000)
+    value.password = value.password 
+     value.confirmPassword = value.confirmPassword
+     let role = authorizationRoles.user;
+     const isUsernameExit = await User.findOne({ username: value.username});
+     if (isUsernameExit) {
+      return res.status(409).json(
+     customResponse<any>({
+       data:{},
+       success: false,
+       error: true,
+       message: `Username address ${value.username} is already exists, please pick a different one.`,
+       status: 409,
+     }))
+   }
+   let {username,password,confirmPassword} =value;
+   const newUser = new User({
+    username,
+    password,
+    confirmPassword,
+    role,
+   
+  });
 
+  const user = await newUser.save();
+  let token = await new Token({ userId: user._id });
+  const payload = {
+    userId: user._id,
+  };
+
+  const accessTokenSecretKey = environmentConfig.ACCESS_TOKEN_SECRET_KEY as string;
+  const accessTokenOptions: SignOptions = {
+    expiresIn: environmentConfig.ACCESS_TOKEN_KEY_EXPIRE_TIME,
+    issuer: environmentConfig.JWT_ISSUER,
+    audience: String(user._id),
+  };
+
+  const refreshTokenSecretKey = environmentConfig.REFRESH_TOKEN_SECRET_KEY as string;
+  const refreshTokenJwtOptions: SignOptions = {
+    expiresIn: environmentConfig.REFRESH_TOKEN_KEY_EXPIRE_TIME,
+    issuer: environmentConfig.JWT_ISSUER,
+    audience: String(user._id),
+  };
+
+  // Generate and set verify email token
+  const generatedAccessToken = await token.generateToken(payload, accessTokenSecretKey, accessTokenOptions);
+  const generatedRefreshToken = await token.generateToken(payload, refreshTokenSecretKey, refreshTokenJwtOptions);
+
+  
+  // Save the updated token
+  token.refreshToken = generatedRefreshToken;
+  token.accessToken = generatedAccessToken;
+  token = await token.save();
+
+
+
+  const data = {
+    user: {
+      accessToken: token.accessToken,
+      refreshToken: token.refreshToken,
+    },
+  };
+    result.push(value);
+ 
+  })
+  try {
+    return res.status(201).json(
+      customResponse<any>({
+        data:result,
+        success: true,
+        error: false,
+        message: ``,
+        status: 201,
+      })
+    );
+  } catch (error) {
+    return res.status(500).json(
+      customResponse<any>({
+        data:error,
+        success: false,
+        error: true,
+        message: ``,
+        status: 500,
+      })
+    );
+  }
+
+ 
+};
+*/
 export const signupService = async (req: Request, res: Response<ResponseT<null>>, next: NextFunction) => {
   const {
     username,
@@ -24,7 +135,8 @@ export const signupService = async (req: Request, res: Response<ResponseT<null>>
     confirmPassword,
   } = req.body;
 
-  let role = authorizationRoles.user;
+
+  let role = authorizationRoles.superadmin;
   try {
     const isUsernameExit = await User.findOne({ username: username});
     if (isUsernameExit) {
@@ -38,7 +150,7 @@ export const signupService = async (req: Request, res: Response<ResponseT<null>>
       }))
     }
 
- 
+  
 
     const newUser = new User({
       username,
@@ -103,7 +215,6 @@ export const signupService = async (req: Request, res: Response<ResponseT<null>>
     return next(InternalServerError);
   }
 };
-
 export const loginService = async (req: Request, res: Response, next: NextFunction) => {
   const { username, password } = req.body;
 
@@ -278,14 +389,28 @@ export const logoutService: RequestHandler = async (req, res, next) => {
     });
 
     if (!token) {
-      return next(new createHttpError.BadRequest());
-    }
+ return res.status(404).send(
+      customResponse<any>({
+        success: false,
+        error: true,
+        message: `Successfully updated user by ID: ${req.params.userId}`,
+        status: 404,
+        data: { user:{} },
+      })
+    );    }
 
     const userId = await verifyRefreshToken(refreshToken);
 
     if (!userId) {
-      return next(new createHttpError.BadRequest());
-    }
+ return res.status(404).send(
+      customResponse<any>({
+        success: false,
+        error: true,
+        message: `Successfully updated user by ID: ${req.params.userId}`,
+        status: 404,
+        data: { user:{} },
+      })
+    );    }
 
     // Clear Token
     await Token.deleteOne({
@@ -322,49 +447,24 @@ export const updateAuthService = async (req: AuthenticatedRequestBody<IUser>, re
     const user = await User.findById(req.params.userId);
 
     if (!user) {
-      return next(new createHttpError.BadRequest());
-    }
+ return res.status(404).send(
+      customResponse<any>({
+        success: false,
+        error: true,
+        message: `Successfully updated user by ID: ${req.params.userId}`,
+        status: 404,
+        data: { user:{} },
+      })
+    );    }
 
     if (!req.user?._id.equals(user._id)) {
       return next(createHttpError(403, `Auth Failed (Unauthorized)`));
     }
 
-    if (username) {
-      const existingUser = await User.findOne({ email: new RegExp(`^${username}$`, 'i') });
-      if (existingUser && !existingUser._id.equals(user._id)) {
-        if (req.file?.filename) {
-          const localFilePath = `${process.env.PWD}/public/uploads/users/${req.file.filename}`;
-          deleteFile(localFilePath);
-        }
-        return next(createHttpError(422, `E-Mail address ${username} is already exists, please pick a different one.`));
-      }
-    }
-
-    if (req.file?.filename && user.cloudinary_id) {
-      // Delete the old image from cloudinary
-      await cloudinary.uploader.destroy(user.cloudinary_id);
-    }
-
-    let cloudinaryResult;
-    if (req.file?.filename) {
-      // localFilePath: path of image which was just
-      // uploaded to "public/uploads/users" folder
-      const localFilePath = `${process.env.PWD}/public/uploads/users/${req.file?.filename}`;
-
-      cloudinaryResult = await cloudinary.uploader.upload(localFilePath, {
-        folder: 'users',
-      });
-
-      // Image has been successfully uploaded on
-      // cloudinary So we dont need local image file anymore
-      // Remove file from local uploads folder
-      deleteFile(localFilePath);
-    }
 
     user.username = username || user.username;
   
-    user.profileImage = req.file?.filename ? cloudinaryResult?.secure_url : user.profileImage;
-    user.cloudinary_id = req.file?.filename ? cloudinaryResult?.public_id : user.cloudinary_id;
+
 
     const updatedUser = await user.save({ validateBeforeSave: false, new: true });
 
@@ -408,17 +508,21 @@ export const removeAuthService = async (req: AuthenticatedRequestBody<IUser>, re
     const user = await User.findById(req.params.userId);
 
     if (!user) {
-      return next(new createHttpError.BadRequest());
-    }
+ return res.status(404).send(
+      customResponse<any>({
+        success: false,
+        error: true,
+        message: `Successfully updated user by ID: ${req.params.userId}`,
+        status: 404,
+        data: { user:{} },
+      })
+    );    }
 
-    if (!req.user?._id.equals(user._id) && req?.user?.role !== 'admin') {
+    if (!req.user?._id.equals(user._id) && req?.user?.role !== 'superadmin') {
       return next(createHttpError(403, `Auth Failed (Unauthorized)`));
     }
 
-    // Delete image from cloudinary
-    if (user.cloudinary_id) {
-      await cloudinary.uploader.destroy(user.cloudinary_id);
-    }
+
 
     // Delete user from db
     const deletedUser = await User.findByIdAndRemove({
@@ -443,6 +547,7 @@ export const removeAuthService = async (req: AuthenticatedRequestBody<IUser>, re
   }
 };
 
+
 export const refreshTokenService: RequestHandler = async (req, res, next) => {
   const { refreshToken } = req.body;
 
@@ -452,14 +557,28 @@ export const refreshTokenService: RequestHandler = async (req, res, next) => {
     });
 
     if (!token) {
-      return next(new createHttpError.BadRequest());
-    }
+ return res.status(404).send(
+      customResponse<any>({
+        success: false,
+        error: true,
+        message: `Successfully updated user by ID: ${req.params.userId}`,
+        status: 404,
+        data: { user:{} },
+      })
+    );    }
 
     const userId = await verifyRefreshToken(refreshToken);
 
     if (!userId) {
-      return next(new createHttpError.BadRequest());
-    }
+ return res.status(404).send(
+      customResponse<any>({
+        success: false,
+        error: true,
+        message: `Successfully updated user by ID: ${req.params.userId}`,
+        status: 404,
+        data: { user:{} },
+      })
+    );    }
 
     const generatedAccessToken = await token.generateToken(
       {
@@ -607,8 +726,15 @@ export const resetPasswordService: RequestHandler = async (req, res, next) => {
     const userId = await verifyRefreshToken(req.params.token);
 
     if (!userId) {
-      return next(new createHttpError.BadRequest());
-    }
+ return res.status(404).send(
+      customResponse<any>({
+        success: false,
+        error: true,
+        message: `Successfully updated user by ID: ${req.params.userId}`,
+        status: 404,
+        data: { user:{} },
+      })
+    );    }
 
     user.password = req.body.password;
     user.confirmPassword = req.body.confirmPassword;
