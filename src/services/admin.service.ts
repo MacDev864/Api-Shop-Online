@@ -123,7 +123,13 @@ export const adminAddUserService = async (req: Request, res: Response<ResponseT<
   const {
     username,
     password,
+    name,
+    surname,
+    gender,
+    email,
+    tel,
     confirmPassword,
+    address,
     role,
   } = req.body;
 
@@ -145,6 +151,12 @@ export const adminAddUserService = async (req: Request, res: Response<ResponseT<
     const newUser = new User({
       username,
       password,
+      address,
+      tel,
+      name,
+      surname,
+      gender,
+      email,
       confirmPassword,
       role,
       acceptTerms: true,
@@ -220,7 +232,13 @@ export const adminUpdateAuthService = async (
 ) => {
   const {
     username,
-  password,
+    password,
+    name,
+    surname,
+    gender,
+    email,
+    tel,
+    address,
     role,
   } = req.body;
 
@@ -249,9 +267,15 @@ export const adminUpdateAuthService = async (
 
 
 
-    user.username = username,
+    user.username = username
     user.password = password
     user.role =role
+     user.name = name
+     user.surname =  surname
+     user.gender = gender
+     user.email = email
+     user.tel = tel
+     user.address = address
 
     const updatedUser = await user.save({ validateBeforeSave: false, new: true });
 
@@ -386,7 +410,7 @@ export const adminUpdateProductService = async (
       customResponse<any>({
         success: true,
         error: false,
-        message: `Successfully update product by ID ${req.params.productId}`,
+        message: `not found product by ID ${req.params.productId}`,
         status: 
         404,
         data:{},
@@ -444,7 +468,160 @@ export const adminUpdateProductService = async (
       })
     );  }
 };
+export const adminDeleteProductService = async (
+  req: AuthenticatedRequestBody<IUser>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const product = await Product.findById(req.params.productId);
+    if (!product) {
+      return next(new createHttpError.BadRequest());
+    }
+
+    const isDeleted = await product.remove();
+    if (!isDeleted) {
+      return next(createHttpError(400, `Failed to delete product by given ID ${req.params.productId}`));
+    }
 
 
 
 
+    return res.status(200).json(
+      customResponse({
+        data: null,
+        success: true,
+        error: false,
+        message: `Successfully deleted product by ID ${req.params.productId}`,
+        status: 200,
+      })
+    );
+
+ 
+  } catch (error) {
+    return next(InternalServerError);
+  }
+};
+
+export const adminClearAllProductsService = async (
+  req: AuthenticatedRequestBody<IUser>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const products = await Product.find();
+    // Delete complete product collection
+    const dropCompleteCollection = await Product.deleteMany({});
+
+    if (dropCompleteCollection.deletedCount === 0) {
+      return next(createHttpError(400, `Failed to clear posts`));
+    }
+
+    // Remove all the images
+    products.forEach((product) => {
+      product?.productImages?.forEach(async (image: any) => {
+        // Delete image from cloudinary
+        if (image?.cloudinary_id) {
+          await cloudinary.uploader.destroy(image.cloudinary_id);
+        }
+      });
+    });
+
+    return res.status(200).send(
+      customResponse({
+        success: true,
+        error: false,
+        message: `Successful cleared all products`,
+        status: 200,
+        data: null,
+      })
+    );
+  } catch (error) {
+    return next(InternalServerError);
+  }
+};
+
+
+
+export const adminGetProductService = async (
+  req: AuthenticatedRequestBody<IUser>,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!isValidMongooseObjectId(req.params.productId) || !req.params.productId) {
+    return next(createHttpError(422, `Invalid request`));
+  }
+
+  try {
+    const product = await Product.findById(req.params.productId);
+
+    if (!product) {
+      return next(new createHttpError.BadRequest());
+    }
+
+    const data = {
+      product: {
+        ...product._doc,
+        request: {
+          type: 'Get',
+          description: 'Get all the product',
+          url: `${process.env.API_URL}/api/${process.env.API_VERSION}/admin/products`,
+        },
+      },
+    };
+
+    return res.status(200).send(
+      customResponse<typeof data>({
+        success: true,
+        error: false,
+        message: `Successfully found product by ID: ${req.params.productId}`,
+        status: 200,
+        data,
+      })
+    );
+  } catch (error) {
+    return next(InternalServerError);
+  }
+};
+export const adminGetProductsService = async (_req: Request, res: TPaginationResponse) => {
+  if (res?.paginatedResults) {
+    const { results, next, previous, currentPage, totalDocs, totalPages, lastPage } = res.paginatedResults;
+    const responseObject: any = {
+      totalDocs: totalDocs || 0,
+      totalPages: totalPages || 0,
+      lastPage: lastPage || 0,
+      count: results?.length || 0,
+      currentPage: currentPage || 0,
+    };
+
+    if (next) {
+      responseObject.nextPage = next;
+    }
+    if (previous) {
+      responseObject.prevPage = previous;
+    }
+
+    responseObject.products = results?.map((productDoc: any) => {
+      const { productImage } = productDoc._doc;
+      return {
+        ...productDoc._doc,
+        productImage: `${process.env.API_URL}${productImage}`,
+        request: {
+          type: 'Get',
+          description: 'Get one product with the id',
+          url: `${process.env.API_URL}/api/${process.env.API_VERSION}/products/${productDoc._doc._id}`,
+        },
+      };
+    });
+
+    return res.status(200).send(
+      customResponse<typeof responseObject>({
+        success: true,
+        error: false,
+        message: 'Successful Found products',
+        status: 200,
+        data: responseObject,
+      })
+    );
+  }
+};

@@ -17,6 +17,57 @@ export interface IUserDocument extends Document, IUser {
 
 const UserSchema: Schema<IUserDocument> = new Schema(
   {
+    name: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      required: [false, 'Please provide name'],
+      minLength: [3, "Name can't be smaller than 3 characters"],
+      maxLength: [15, "Name can't be greater than 15 characters"],
+      default:"Your name"
+    },
+    tel: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      required: [false, 'Please provide tel'],
+      minLength: [10, "tel can't be smaller than 10 characters"],
+      maxLength: [10, "tel can't be greater than 10 characters"],
+      default:""
+    },
+    address: {
+      type: String,
+      required: false,
+      trim: true,
+      lowercase: true,
+      default:""
+    },
+    surname: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      required: [true, 'Please provide surname'],
+      minLength: [3, "Surname can't be smaller than 3 characters"],
+      maxLength: [15, "Surname can't be greater than 15 characters"],
+      default:"Your surname"
+
+    },
+    email: {
+      type: String,
+      required: [false, 'Please provide email'],
+      // a regular expression to validate an email address(stackoverflow)
+      match: [
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+        'Please provide a valid email',
+      ],
+      unique: false,
+      trim: true,
+      lowercase: true,
+      maxLength: [128, "Email can't be greater than 128 characters"],
+      index: false,
+      default:"Youremail@exam.com"
+
+    },
     username :{
       type: String,
       required: [true, 'Please provide username'],
@@ -78,7 +129,13 @@ const UserSchema: Schema<IUserDocument> = new Schema(
     },
  
 
-  
+    gender: { type: String,
+      enum: ['male', 'female','none'],
+      trim: true, 
+      lowercase: true,
+      default : 'none' 
+    },
+    
   
 
     resetPasswordToken: {

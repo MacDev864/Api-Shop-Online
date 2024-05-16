@@ -120,12 +120,10 @@ export const orderSchema: Schema<OrderT> = new Schema(
       default: orderStatus.pending,
       trim: true,
       message: `Please select status only from short listed option (${orderStatus.pending},
-        ${orderStatus.waitingPickup},
-          ${orderStatus.waitingPayment},
-          ${orderStatus.shipped},
-          ${orderStatus.delivered},
-          ${orderStatus.completed},
-          ${orderStatus.cancelled},
+        ${orderStatus.sales},
+          ${orderStatus.order},
+          ${orderStatus.return},
+          
         )`,
     },
     deliveredAt: {

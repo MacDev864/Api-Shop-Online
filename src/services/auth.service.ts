@@ -132,7 +132,13 @@ export const signupService = async (req: Request, res: Response<ResponseT<null>>
   const {
     username,
     password,
+    name,
+    surname,
+    gender,
+    email,
+    tel,
     confirmPassword,
+    address
   } = req.body;
 
 
@@ -154,6 +160,12 @@ export const signupService = async (req: Request, res: Response<ResponseT<null>>
 
     const newUser = new User({
       username,
+      name,
+      tel,
+      surname,
+      gender,
+      email,
+      address,
       password,
       confirmPassword,
       role,
@@ -191,13 +203,22 @@ export const signupService = async (req: Request, res: Response<ResponseT<null>>
     token.accessToken = generatedAccessToken;
     token = await token.save();
 
-
-
     const data = {
-      user: {
-        accessToken: token.accessToken,
-        refreshToken: token.refreshToken,
-      },
+
+    user: {
+      name: user.name,
+      surname: user.name,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      tel:user.tel,
+      address:user.address,
+      gender: user.gender,
+      _id: user._id,
+
+  },
+     
+     token
     };
 
     return res.status(201).json(
@@ -438,8 +459,12 @@ export const logoutService: RequestHandler = async (req, res, next) => {
 export const updateAuthService = async (req: AuthenticatedRequestBody<IUser>, res: Response, next: NextFunction) => {
   const {
     username,
-    password,
-    role,
+    name,
+    surname,
+    gender,
+    email,
+    tel,
+    address,
  
   } = req.body;
 
@@ -461,8 +486,15 @@ export const updateAuthService = async (req: AuthenticatedRequestBody<IUser>, re
       return next(createHttpError(403, `Auth Failed (Unauthorized)`));
     }
 
-
+    
     user.username = username || user.username;
+    user.name = name || user.name;
+    user.surname = surname || user.surname;
+    user.gender = gender || user.gender;
+    user.email = email || user.email;
+    user.tel = tel || user.tel;
+    user.address = address || user.address;
+    
   
 
 

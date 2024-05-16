@@ -23,22 +23,16 @@ import {
 import {
   adminAddProductController,
   adminAddUserController,
-//   adminClearAllOrdersController,
-//   adminClearAllProductsController,
-//   adminCreatePostController,
-//   adminDeleteAllCommentInPostController,
-//   adminDeleteAllPostForGivenUserController,
-//   adminDeleteCommentInPostController,
-//   adminDeletePostController,
-//   adminDeleteProductController,
+  adminClearAllProductsController,
+  adminDeleteProductController,
 //   adminDeleteSingleOrderController,
 //   adminGetAllOrdersForGivenUserController,
 //   adminGetOrderController,
 //   adminGetOrdersController,
 //   adminGetPostController,
 //   adminGetPostsController,
-//   adminGetProductController,
-//   adminGetProductsController,
+  adminGetProductController,
+  adminGetProductsController,
   adminGetUserController,
   adminGetUsersController,
   adminRemoveUserController,
@@ -93,5 +87,33 @@ router.put(
   updateProductValidation,
   adminUpdateProductController
 );
+router.get(
+  '/products',
+  isAuth,
+checkRoleAdmin,
+  productsPaginationMiddleware(),
+  adminGetProductsController
+);
+router.get(
+  '/products/:productId',
+  isAuth,
+checkRoleAdmin,
 
+  adminGetProductController
+);
+router.delete(
+  '/products/delete/:productId',
+  isAuth,
+checkRoleAdmin,
+
+  productIdValidation,
+  adminDeleteProductController
+);
+router.delete(
+  '/products/clear-all-products',
+  isAuth,
+checkRoleAdmin,
+
+  adminClearAllProductsController
+);
 export default router;

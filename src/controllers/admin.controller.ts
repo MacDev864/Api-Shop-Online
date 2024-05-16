@@ -2,9 +2,9 @@ import { NextFunction, Request, Response } from 'express';
 import {
   adminAddProductService,
   adminAddUserService,
-  // adminDeleteProductService,
-  // adminGetProductService,
-  // adminGetProductsService,
+  adminDeleteProductService,
+  adminGetProductService,
+  adminGetProductsService,
   adminGetUserService,
   adminGetUsersService,
   adminUpdateProductService,
@@ -24,7 +24,7 @@ import {
   // adminClearAllPostsService,
   // adminUpdatePostService,
   // adminDeleteAllPostForGivenUserService,
-  // adminClearAllProductsService,
+  adminClearAllProductsService,
   // adminDeleteAllCommentInPostService,
   // adminDeleteCommentInPostService,
 } from '../services';
@@ -61,5 +61,17 @@ export const adminUpdateProductController = (
   res: Response,
   next: NextFunction
 ) => adminUpdateProductService(req, res, next);
+
+export const adminDeleteProductController = (req: AuthenticatedRequestBody<IUser>, res: Response, next: NextFunction) =>
+  adminDeleteProductService(req, res, next);
+
+export const adminClearAllProductsController = (
+  req: AuthenticatedRequestBody<IUser>,
+  res: Response,
+  next: NextFunction
+) => adminClearAllProductsService(req, res, next);
+export const adminGetProductController = (req: AuthenticatedRequestBody<IUser>, res: Response, next: NextFunction) =>
+  adminGetProductService(req, res, next);
+export const adminGetProductsController = (req: Request, res: TPaginationResponse) => adminGetProductsService(req, res);
 
 export default adminGetUsersController;

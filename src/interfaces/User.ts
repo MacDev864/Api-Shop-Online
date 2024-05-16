@@ -9,7 +9,11 @@ export interface FollowT {
   userId?: string;
 }
 export interface IUser extends Document {
- 
+  name: string;
+  surname: string;
+  tel:string;
+  address:string;
+  email: string;
   username: string;
   password: string;
   confirmPassword: string;
@@ -24,6 +28,8 @@ export interface IUser extends Document {
   resetPasswordToken?: string;
   resetPasswordExpires?: string;
   userId?: string;
+  gender?: string;
+
   timestamps?: boolean;
   cart?: {
     items: {

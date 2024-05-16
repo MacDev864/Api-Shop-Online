@@ -6,4 +6,7 @@ export const orderStatus = {
   shipped: 'shipped',
   cancelled: 'cancelled',
   completed: 'completed',
+  sales: 'sales',
+  order: 'order',
+  return: 'return',
 };
