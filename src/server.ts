@@ -9,12 +9,7 @@ export const startServer = async () => {
     const conn: any = await connectDB(
       environmentConfig.MONGODB_CONNECTION_STRING
     );
-    console.log(`MongoDB database connection established successfully to... ${conn?.connection?.host}`);
-
-    // app?.listen(environmentConfig.PORT, () => {
-    //     console.log(`Server is listening on port: http://localhost:${environmentConfig.PORT} ....`.inverse);
-    //   });
-
+    console.log(`MongoDB database connection  successfully to... ${conn?.connection?.host}`);
     app?.listen(environmentConfig.PORT, () => {
       console.log(`Server is running on http://localhost:${environmentConfig.PORT}`);
     });
