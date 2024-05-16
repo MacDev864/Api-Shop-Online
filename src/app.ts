@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import api from "./api";
 import colors from 'colors';
+import bodyParser from "body-parser";
 
 dotenv.config();
 
@@ -16,16 +17,10 @@ const app: express.Application | undefined = express();
 // Load App Middleware
 app.use(morgan('dev'));
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-app.use(
-  helmet({
-    crossOriginResourcePolicy: false,
-    crossOriginEmbedderPolicy: false,
-    crossOriginOpenerPolicy: false,
-  })
+app.use(bodyParser.json({ limit: '100mb' })
 );
+app.use(bodyParser.urlencoded({ extended: true }));
+
 
 // Serve all static files inside public directory.
 
