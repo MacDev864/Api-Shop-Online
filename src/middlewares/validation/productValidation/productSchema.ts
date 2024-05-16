@@ -17,7 +17,7 @@ export const productSchema = {
           .required()
           .label('Invalid request (Please upload Image)')
       )
-      .required(),
+      ,
     name: Joi.string().min(3).max(100).required(),
     description: Joi.string().min(15).required(),
     price: Joi.number().required(),
