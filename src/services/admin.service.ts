@@ -909,10 +909,45 @@ export const adminClearAllOrdersService = async (
     return next(error);
   }
 };
-export const adminGetTopBestSellingService = async (
-  req: AuthenticatedRequestBody<IUser>,
-  res: Response,
-  next: NextFunction
-) => {
-  
-}
+
+export const adminGetTopBestSellingService = async (_req: Request, res: TPaginationResponse) => {
+  if (res?.paginatedResults) {
+    const { results, next, previous, currentPage, totalDocs, totalPages, lastPage } = res.paginatedResults;
+    const responseObject: any = {
+      totalDocs: totalDocs || 0,
+      totalPages: totalPages || 0,
+      lastPage: lastPage || 0,
+      count: results?.length || 0,
+      currentPage: currentPage || 0,
+    };
+
+    if (next) {
+      responseObject.nextPage = next;
+    }
+    if (previous) {
+      responseObject.prevPage = previous;
+    }
+
+    responseObject.products = results?.map((productDoc: any) => {
+      const { user, ...otherProductInfo } = productDoc._doc;
+      return {
+        ...otherProductInfo,
+        request: {
+          type: 'Get',
+          description: 'Get one product with the id',
+
+        },
+      };
+    });
+
+    return res.status(200).send(
+      customResponse<typeof responseObject>({
+        success: true,
+        error: false,
+        message: 'Successful Found products',
+        status: 200,
+        data: responseObject,
+      })
+    );
+  }
+};

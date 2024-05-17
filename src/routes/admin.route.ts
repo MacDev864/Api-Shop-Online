@@ -13,6 +13,8 @@ import {
   updateUserValidation,
   userIdValidation,
   usersPaginationMiddleware,
+  topBestSelling,
+  ordersPaginationMiddleware,
 } from '../middlewares';
 import {
   adminAddProductController,
@@ -42,7 +44,7 @@ import checkIsAdmin, { checkRoleAdmin } from '../middlewares/auth/checkIsAdmin';
 const router = express.Router();
 /* Users manage By Super admin   */
 router.get('/users', isAuth, isSuperadmin, usersPaginationMiddleware(), adminGetUsersController);
-router.get('/dashboard/top-10-bestselling', isAuth, checkRoleAdmin, usersPaginationMiddleware(), adminGetTopBestSellingController);
+router.get('/dashboard/top-10-bestselling', isAuth, checkRoleAdmin, topBestSelling,ordersPaginationMiddleware, adminGetTopBestSellingController);
 router.get('/users/:userId', isAuth,isSuperadmin, adminGetUserController);
 router.post(
   '/users/add',
