@@ -20,9 +20,7 @@ router.get('/', productsPaginationMiddleware(), getProductsController);
 router.get('/top-5-cheap', top5AliasProductsMiddleware(), productsPaginationMiddleware(), getProductsController);
 router.get('/:productId', getProductController);
 router.put('/reviews', isAuth, reviewProductValidation, addReviewController);
-router.get('/:productId', getProductController);
-router.put('/reviews', isAuth, reviewProductValidation, addReviewController);
-
-router.route('/reviews/:productId').delete(isAuth, deleteReviewController).get(getReviewsController);
-
+router.route('/reviews/:productId')
+  .delete(isAuth, deleteReviewController)
+  .get(getReviewsController);
 export default router;

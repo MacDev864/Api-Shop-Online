@@ -1,22 +1,16 @@
 import express from 'express';
 
 import {
-  addPostValidation,
   addProductValidation,
   customRoles,
-  deleteCommentValidation,
   isSuperadmin,
   isAuth,
-  postIdValidation,
-  postPaginationMiddleware,
   productIdValidation,
   productsPaginationMiddleware,
   signupUserValidation,
   updateOrderStatusValidation,
-  updatePostValidation,
   updateProductValidation,
   updateUserValidation,
-  uploadImage,
   userIdValidation,
   usersPaginationMiddleware,
 } from '../middlewares';
@@ -25,30 +19,30 @@ import {
   adminAddUserController,
   adminClearAllProductsController,
   adminDeleteProductController,
-//   adminDeleteSingleOrderController,
-//   adminGetAllOrdersForGivenUserController,
-//   adminGetOrderController,
-//   adminGetOrdersController,
-//   adminGetPostController,
-//   adminGetPostsController,
+  adminDeleteSingleOrderController,
+  adminGetAllOrdersForGivenUserController,
+  adminGetOrderController,
+  adminGetOrdersController,
+  adminClearAllOrdersController,
   adminGetProductController,
   adminGetProductsController,
   adminGetUserController,
   adminGetUsersController,
   adminRemoveUserController,
   adminUpdateAuthController,
-//   adminUpdateOrderStatusController,
-//   adminUpdatePostController,
+  adminUpdateOrderStatusController,
   adminUpdateProductController,
-} from '../controllers/admin.controller';
+  adminDeleteAllOrderForGivenUserController,
+  adminGetTopBestSellingController,
+} from '../controllers';
 import { environmentConfig } from '../configs';
-// import { adminClearAllPostsService, adminDeleteAllOrderForGivenUserService } from '@src/services';
 import { authorizationRoles } from '../constants';
 import checkIsAdmin, { checkRoleAdmin } from '../middlewares/auth/checkIsAdmin';
 
 const router = express.Router();
 /* Users manage By Super admin   */
 router.get('/users', isAuth, isSuperadmin, usersPaginationMiddleware(), adminGetUsersController);
+router.get('/dashboard/top-10-bestselling', isAuth, checkRoleAdmin, usersPaginationMiddleware(), adminGetTopBestSellingController);
 router.get('/users/:userId', isAuth,isSuperadmin, adminGetUserController);
 router.post(
   '/users/add',
@@ -116,4 +110,49 @@ checkRoleAdmin,
 
   adminClearAllProductsController
 );
+router.get(
+  '/orders',
+  checkRoleAdmin,
+  isAuth,
+  adminGetOrdersController
+);
+router.delete(
+  '/orders/clear-all-orders',
+  isAuth,
+  checkRoleAdmin,
+  adminClearAllOrdersController
+);
+router.get(
+  '/orders/get-user-order/:userId',
+  isAuth,
+  checkRoleAdmin,
+  adminGetAllOrdersForGivenUserController
+);
+router
+  .route('/orders/:orderId')
+  .get(
+    isAuth, 
+    checkRoleAdmin,
+    adminGetOrderController
+  )
+  .patch(
+    isAuth,
+    checkRoleAdmin,
+      updateOrderStatusValidation,
+    adminUpdateOrderStatusController
+  )
+  .delete(
+    isAuth,
+    checkRoleAdmin,
+      adminDeleteSingleOrderController
+  );
+
+router.delete(
+  '/orders/clear-user-order/:userId',
+  isAuth,
+  checkRoleAdmin,
+  adminDeleteAllOrderForGivenUserController
+);
+
+
 export default router;

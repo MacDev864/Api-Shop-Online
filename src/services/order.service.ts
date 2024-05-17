@@ -35,7 +35,15 @@ export const getOrdersService = async (req: AuthenticatedRequestBody<IUser>, res
       })
     );
   } catch (error) {
-    return next(InternalServerError);
+      return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: `Thank you, your orders will be shipped in 2-3 business days`,
+        status: 500,
+        data:error,
+      })
+    );
   }
 };
 
@@ -72,7 +80,15 @@ export const getOrderService = async (req: AuthenticatedRequestBody<IUser>, res:
       })
     );
   } catch (error) {
-    return next(InternalServerError);
+      return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: `Thank you, your orders will be shipped in 2-3 business days`,
+        status: 500,
+        data:error,
+      })
+    );
   }
 };
 
@@ -82,17 +98,21 @@ export const postOrderService = async (
   next: NextFunction
 ) => {
   try {
-    const { shippingInfo, paymentInfo, textAmount, shippingAmount, totalAmount, orderStatus, orderItems } = req.body;
-
-    const authUser = await User.findById(req.user?._id).select('-password -confirmPassword -cart -status');
+    const { shippingInfo, paymentInfo, textAmount, shippingAmount, totalAmount, orderStatus } = req.body;
+    const authUser = await User.findById(req.user?._id).select('-password -confirmPassword  -status');
+    const orderItems = authUser.cart.items.map((item: { quantity: number; productId: { _doc: OrderT } }) => {
+        // console.log(item);
+        return { quantity: item.quantity, product:item.productId };
+    });
+    // console.log(orderItems);
 
     if (!authUser) {
       return next(createHttpError(401, `Auth Failed`));
     }
 
-    // check if ordered product still exists on db
+    // // check if ordered product still exists on db
     if (orderItems && orderItems.length > 0) {
-      orderItems.forEach(async (item) => {
+      orderItems.forEach(async (item: { product: any; }) => {
         const isProductStillExits = await Product.findById(item.product);
         if (!isProductStillExits) return next(new createHttpError.BadRequest());
       });
@@ -133,13 +153,14 @@ export const postOrderService = async (
         name: authUser.name,
         surname: authUser.surname,
         email: authUser.email,
-        phone: authUser.mobileNumber,
+        tel: authUser.tel,
         address: authUser.address,
         userId: userCart._id,
       },
       orderItems: finalItemsToOrder,
     });
-
+    console.log(order);
+    
     // Save the order
     const orderedItem = await order.save();
     orderedItem.user = authUser;
@@ -163,7 +184,15 @@ export const postOrderService = async (
       })
     );
   } catch (error) {
-    return next(InternalServerError);
+      return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: ``,
+        status: 500,
+        data:error,
+      })
+    );
   }
 };
 
@@ -202,7 +231,15 @@ export const clearSingleOrderService = async (
       })
     );
   } catch (error) {
-    return next(InternalServerError);
+      return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: `Thank you, your orders will be shipped in 2-3 business days`,
+        status: 500,
+        data:error,
+      })
+    );
   }
 };
 
@@ -273,6 +310,14 @@ export const getInvoicesService = async (req: AuthenticatedRequestBody<IUser>, r
     pdfDoc.fontSize(20).text(`Total Price: $${totalPrice}`);
     pdfDoc.end();
   } catch (error) {
-    return next(InternalServerError);
+      return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: `Thank you, your orders will be shipped in 2-3 business days`,
+        status: 500,
+        data:error,
+      })
+    );
   }
 };

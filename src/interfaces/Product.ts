@@ -3,7 +3,6 @@ import { IUser } from './User';
 
 export interface ReviewsT {
   user: mongoose.Schema.Types.ObjectId;
-  name: string;
   rating?: number;
   comment: string;
 }

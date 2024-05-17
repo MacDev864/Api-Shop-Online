@@ -11,7 +11,7 @@ import {
 const router = express.Router();
 
 router.get('/', isAuth, getCartController);
-router.post('/', isAuth, productIdValidation, addProductToCartController);
+router.post('/add-cart', isAuth, productIdValidation, addProductToCartController);
 router.delete('/clear-cart', isAuth, clearCartController);
 router.post('/delete-item', isAuth, deleteProductFromCartController);
 

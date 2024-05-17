@@ -40,7 +40,7 @@ export const getProductsService = async (_req: Request, res: TPaginationResponse
         request: {
           type: 'Get',
           description: 'Get one product with the id',
-          url: `${process.env.API_URL}/api/${process.env.API_VERSION}/products/${productDoc._doc._id}`,
+
         },
       };
     });
@@ -119,7 +119,15 @@ export const addProductToCartService = async (
     const user = await User.findOne({ username: req.user?.username });
 
     if (!user) {
-      return next(createHttpError(401, `Auth Failed`));
+         return res.status(403).send(
+      customResponse<any>({
+        success: false,
+        error: true,
+        message: `auth failed `,
+        status: 403,
+        data: {},
+      })
+    );
     }
 
     const doDecrease = req.query.decrease === 'true';
@@ -139,7 +147,15 @@ export const addProductToCartService = async (
       })
     );
   } catch (error) {
-    return next(error);
+    return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: ``,
+        status: 500,
+        data: error,
+      })
+    );
   }
 };
 
@@ -162,7 +178,15 @@ export const deleteProductFromCartService = async (
     const user = await User.findOne({ username: req.user?.username });
 
     if (!user) {
-      return next(createHttpError(401, `Auth Failed`));
+         return res.status(403).send(
+      customResponse<any>({
+        success: false,
+        error: true,
+        message: `auth failed `,
+        status: 403,
+        data: {},
+      })
+    );
     }
 
     const updatedUser = await user.removeFromCart(req.body.productId);
@@ -181,7 +205,15 @@ export const deleteProductFromCartService = async (
       })
     );
   } catch (error) {
-    return next(error);
+    return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: ``,
+        status: 500,
+        data: error,
+      })
+    );
   }
 };
 
@@ -207,33 +239,67 @@ export const addReviewService = async (
 
     const isAlreadyReview = product.reviews.find((rev: ReviewsT) => rev.user.toString() === req.user?._id.toString());
 
+
+    if (product.reviews.length > 0) {
+      const averageRating =
+        product.reviews.reduce((accumulator: number, rev: ReviewsT) => accumulator + Number(rev.rating || 0), 0) /
+        product.reviews.length;
+    // product.reviews.unshift(review as ReviewsT);
+    product.numberOfReviews = product.reviews.length;
+      product.ratings = Number(averageRating.toFixed(1));
+    }
     if (isAlreadyReview) {
+
       product.reviews.forEach((rev: ReviewsT) => {
+
         if (rev.user.toString() === req.user?._id.toString()) {
           rev.comment = comment;
           rev.rating = rating;
         }
       });
-    } else {
-      // product.reviews.unshift(review as ReviewsT);
-      product.numberOfReviews = product.reviews.length;
+
+
+
+      const updatedProduct = await product.save({
+        validateBeforeSave: true,
+      });
+
+      const data = {
+        product: updatedProduct,
+      };
+
+      return res.status(200).send(
+        customResponse<typeof data>({
+          success: true,
+          error: false,
+          message: `Successfully add review to product : ${req.body.productId} `,
+          status: 200,
+          data,
+        })
+      );
     }
+    product.reviews.push({
+      user: req.user?.id,
+      rating: rating,
+      comment: comment
+    })
 
-    //  adjust average ratings
-    const averageRating =
-      product.reviews.reduce((accumulator: number, rev: ReviewsT) => accumulator + Number(rev.rating || 0), 0) /
-      product.reviews.length;
 
-    product.ratings = Number(averageRating.toFixed(1));
+
 
     const updatedProduct = await product.save({
       validateBeforeSave: true,
     });
 
+
+
     const data = {
       product: updatedProduct,
     };
 
+    // const data = {
+    //   product: {},
+    // };
     return res.status(200).send(
       customResponse<typeof data>({
         success: true,
@@ -243,8 +309,18 @@ export const addReviewService = async (
         data,
       })
     );
+
+
   } catch (error) {
-    return next(error);
+    return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: ``,
+        status: 500,
+        data: error,
+      })
+    );
   }
 };
 
@@ -267,12 +343,21 @@ export const deleteReviewService = async (
     const isAlreadyReview = product.reviews.find((rev: ReviewsT) => rev.user.toString() === req.user?._id.toString());
 
     if (!isAlreadyReview) {
-      return next(createHttpError(403, `Auth Failed (Unauthorized)`));
+         return res.status(403).send(
+      customResponse<any>({
+        success: false,
+        error: true,
+        message: `Auth Failed (Unauthorized)`,
+        status: 403,
+        data: {},
+      })
+    );
+      // return next(createHttpError(403, ``));
     }
 
     const filteredReviews = product.reviews.filter((rev: ReviewsT) => rev.user.toString() !== req.user?._id.toString());
 
-    if (filteredReviews.length) {
+    if (filteredReviews.length > 0) {
       //  adjust average ratings
       const averageRating =
         filteredReviews.reduce((accumulator: number, rev: ReviewsT) => accumulator + Number(rev.rating || 0), 0) /
@@ -303,7 +388,15 @@ export const deleteReviewService = async (
       })
     );
   } catch (error) {
-    return next(error);
+    return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: ``,
+        status: 500,
+        data: error,
+      })
+    );
   }
 };
 
@@ -341,7 +434,15 @@ export const getReviewsService = async (
       })
     );
   } catch (error) {
-    return next(error);
+    return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: ``,
+        status: 500,
+        data: error,
+      })
+    );
   }
 };
 
@@ -373,7 +474,15 @@ export const getCartService = async (req: AuthenticatedRequestBody<IUser>, res: 
       })
     );
   } catch (error) {
-    return next(error);
+    return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: ``,
+        status: 500,
+        data: error,
+      })
+    );
   }
 };
 
@@ -400,7 +509,15 @@ export const clearCartService = async (req: AuthenticatedRequestBody<IUser>, res
       })
     );
   } catch (error) {
-    return next(error);
+    return res.status(500).send(
+      customResponse<typeof error>({
+        success: false,
+        error: true,
+        message: ``,
+        status: 500,
+        data: error,
+      })
+    );
   }
 };
 

@@ -104,12 +104,7 @@ export const ProductSchema: Schema<ProductT> = new Schema(
           ref: 'User', // add relationship
           required: [true, 'User is required'],
         },
-        name: {
-          type: String,
-          required: [true, ''],
-          trim: true,
-          lowercase: true,
-        },
+      
         rating: {
           type: Number,
           required: false,

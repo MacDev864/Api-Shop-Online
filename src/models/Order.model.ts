@@ -65,7 +65,7 @@ export const orderSchema: Schema<OrderT> = new Schema(
         trim: true,
         lowercase: true,
       },
-      phone: {
+      tel: {
         type: String,
         required: true,
       },
@@ -119,7 +119,8 @@ export const orderSchema: Schema<OrderT> = new Schema(
       ],
       default: orderStatus.pending,
       trim: true,
-      message: `Please select status only from short listed option (${orderStatus.pending},
+      message: `Please select status only from short listed option (
+        ${orderStatus.pending},
         ${orderStatus.sales},
           ${orderStatus.order},
           ${orderStatus.return},

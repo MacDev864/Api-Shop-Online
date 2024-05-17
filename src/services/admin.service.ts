@@ -4,6 +4,8 @@ import { SignOptions } from 'jsonwebtoken';
 
 // import Token from '@src/models/Token.model';
 import User from '../models/User.model';
+import Order from '../models/Order.model';
+
 // import Order from '@src/models/Order.model';
 // import Post from '@src/models/Post.model';
 // import Product from '@src/models/Product.model';
@@ -549,14 +551,32 @@ export const adminGetProductService = async (
   next: NextFunction
 ) => {
   if (!isValidMongooseObjectId(req.params.productId) || !req.params.productId) {
-    return next(createHttpError(422, `Invalid request`));
+    // return next(createHttpError(422, `Invalid request`));
+    return res.status(422).send(
+      customResponse<object>({
+        success: false,
+        error: true,
+        message: `Invalid request`,
+        status: 422,
+        data:{},
+      })
+    );
   }
 
   try {
     const product = await Product.findById(req.params.productId);
 
     if (!product) {
-      return next(new createHttpError.BadRequest());
+      // return next(new createHttpError.BadRequest());
+      return res.status(404).send(
+        customResponse<typeof data>({
+          success: false,
+          error: true,
+          message: `not found product by ID: ${req.params.productId}`,
+          status: 404,
+          data:product,
+        })
+      );
     }
 
     const data = {
@@ -580,7 +600,17 @@ export const adminGetProductService = async (
       })
     );
   } catch (error) {
-    return next(InternalServerError);
+    // return next(InternalServerError);
+
+    return res.status(500).send(
+      customResponse<typeof error
+      >({
+        success: false,
+        error: true,
+        message: ``,
+        status: 500,
+        data:error,
+      }))
   }
 };
 export const adminGetProductsService = async (_req: Request, res: TPaginationResponse) => {
@@ -609,7 +639,7 @@ export const adminGetProductsService = async (_req: Request, res: TPaginationRes
         request: {
           type: 'Get',
           description: 'Get one product with the id',
-          url: `${process.env.API_URL}/api/${process.env.API_VERSION}/products/${productDoc._doc._id}`,
+          
         },
       };
     });
@@ -625,3 +655,264 @@ export const adminGetProductsService = async (_req: Request, res: TPaginationRes
     );
   }
 };
+export const adminGetOrdersService = async (
+  req: AuthenticatedRequestBody<IUser>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const orders = await Order.find()
+      .populate('user.userId', '-password -confirmPassword ')
+      .populate({
+        path: 'orderItems.product',
+        // Get users of product
+        populate: { path: 'user', select: '-password -confirmPassword' },
+      })
+      .exec();
+
+    const data = {
+      orders,
+    };
+
+    return res.status(200).send(
+      customResponse<typeof data>({
+        success: true,
+        error: false,
+        message: `Successful Found all orders`,
+        status: 200,
+        data,
+      })
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const adminGetOrderService = async (req: AuthenticatedRequestBody<IUser>, res: Response, next: NextFunction) => {
+  if (!isValidMongooseObjectId(req.params.orderId) || !req.params.orderId) {
+    return next(createHttpError(422, `Invalid request`));
+  }
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId)
+      .populate('user.userId', '-password -confirmPassword ')
+      .populate({
+        path: 'orderItems.product',
+        // Get users of product
+        populate: { path: 'user', select: '-password -confirmPassword' },
+      })
+      .exec();
+
+    if (!order) {
+      return next(new createHttpError.BadRequest());
+    }
+
+    const data = {
+      order,
+    };
+
+    return res.status(200).send(
+      customResponse<typeof data>({
+        success: true,
+        error: false,
+        message: `Successfully found order by ID ${orderId}`,
+        status: 200,
+        data,
+      })
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const adminGetAllOrdersForGivenUserService = async (
+  req: AuthenticatedRequestBody<IUser>,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!isValidMongooseObjectId(req.params.userId) || !req.params.userId) {
+    return next(createHttpError(422, `Invalid request`));
+  }
+
+  try {
+    const { userId } = req.params;
+
+    const orders = await Order.find({ 'user.userId': userId })
+      .populate('user.userId', '-password -confirmPassword ')
+      .populate({
+        path: 'orderItems.product',
+        populate: { path: 'user', select: '-password -confirmPassword' },
+      })
+      .exec();
+
+    const data = {
+      orders,
+    };
+
+    return res.status(200).send(
+      customResponse<typeof data>({
+        success: true,
+        error: false,
+        message: !orders.length
+          ? `No order found for user by ID ${userId}`
+          : `Successfully found  all order for user by ID ${userId}`,
+        status: 200,
+        data,
+      })
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const adminDeleteSingleOrderService = async (
+  req: AuthenticatedRequestBody<IUser>,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!isValidMongooseObjectId(req.params.orderId) || !req.params.orderId) {
+    return next(createHttpError(422, `Invalid request`));
+  }
+
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return next(new createHttpError.BadRequest());
+    }
+
+    const isRemoved = await Order.findByIdAndRemove({
+      _id: orderId,
+    });
+
+    if (!isRemoved) {
+      return next(createHttpError(400, `Failed to delete order by given ID ${orderId}`));
+    }
+
+    return res.status(200).json(
+      customResponse({
+        data: null,
+        success: true,
+        error: false,
+        message: `Successfully deleted order by ID ${orderId}`,
+        status: 200,
+      })
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const adminDeleteAllOrderForGivenUserService = async (
+  req: AuthenticatedRequestBody<IUser>,
+  res: Response,
+  next: NextFunction
+) => {
+  if (!isValidMongooseObjectId(req.params.userId) || !req.params.userId) {
+    return next(createHttpError(422, `Invalid request`));
+  }
+
+  try {
+    const { userId } = req.params;
+    const droppedUserOrder = await Order.deleteMany({ 'user.userId': userId });
+
+    if (droppedUserOrder.deletedCount === 0) {
+      return next(createHttpError(400, `Failed to delete order for given user by ID ${userId}`));
+    }
+
+    return res.status(200).json(
+      customResponse({
+        data: null,
+        success: true,
+        error: false,
+        message: `Successfully deleted all orders for user by ID ${userId}`,
+        status: 200,
+      })
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const adminUpdateOrderStatusService = async (
+  req: AuthenticatedRequestBody<ProcessingOrderT>,
+  res: Response,
+  next: NextFunction
+) => {
+  const { orderStatus } = req.body;
+  if (!isValidMongooseObjectId(req.params.orderId) || !req.params.orderId) {
+    return next(createHttpError(422, `Invalid request`));
+  }
+
+  try {
+    const { orderId } = req.params;
+    const order = await Order.findOneAndUpdate(
+      { _id: orderId },
+      {
+        orderStatus,
+      },
+      {
+        new: true,
+      }
+    )
+      .populate('user.userId', '-password -confirmPassword ')
+      .populate({
+        path: 'orderItems.product',
+        populate: { path: 'user', select: '-password -confirmPassword' },
+      })
+      .exec();
+
+    if (!order) {
+      return next(new createHttpError.BadRequest());
+    }
+    const data = {
+      order,
+    };
+
+    return res.status(201).send(
+      customResponse<typeof data>({
+        success: true,
+        error: false,
+        message: `Successfully update order by ID ${orderId}`,
+        status: 200,
+        data,
+      })
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+export const adminClearAllOrdersService = async (
+  req: AuthenticatedRequestBody<IUser>,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Delete complete Order collection
+    const dropCompleteCollection = await Order.deleteMany({});
+
+    if (dropCompleteCollection.deletedCount === 0) {
+      return next(createHttpError(400, `Failed to Cleared orders`));
+    }
+
+    return res.status(200).send(
+      customResponse({
+        success: true,
+        error: false,
+        message: `Successful Cleared all orders`,
+        status: 200,
+        data: null,
+      })
+    );
+  } catch (error) {
+    return next(error);
+  }
+};
+export const adminGetTopBestSellingService = async (
+  req: AuthenticatedRequestBody<IUser>,
+  res: Response,
+  next: NextFunction
+) => {
+  
+}

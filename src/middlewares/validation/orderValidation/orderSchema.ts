@@ -31,7 +31,7 @@ export const orderSchema = {
             product: vaildObjectId().required().label('Invalid request (Please please provide vaild product id)'),
             quantity: Joi.number().min(1).required(),
           })
-          .required()
+          
       )
       .default([]),
   }),
